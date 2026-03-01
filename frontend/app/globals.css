@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8f7f4;
+  --foreground: #1a1a1a;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.step-active {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.step-done {
+  background: #16a34a;
+  color: #fff;
+}
+
+.step-pending {
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  outline: none;
+  background: white;
+}
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #1a1a1a;
+}
