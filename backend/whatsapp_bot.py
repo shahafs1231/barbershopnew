@@ -524,3 +524,20 @@ async def process_message(phone: str, text: str) -> str:
         break  # unexpected stop_reason
 
     return "Something went wrong. Please try again."
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    phone = input("Your phone number (e.g. 972501234567): ").strip()
+    print("Type your message. Ctrl+C to quit.\n")
+    while True:
+        try:
+            msg = input("You: ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print("\nBye!")
+            break
+        if not msg:
+            continue
+        reply = asyncio.run(process_message(phone, msg))
+        print(f"Bot: {reply}\n")
