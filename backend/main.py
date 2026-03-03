@@ -7,7 +7,8 @@ from typing import List, Optional
 from datetime import datetime, date, timedelta
 import os, uuid, aiofiles
 
-import models, schemas
+import models
+import schemas
 from database import engine, get_db, Base
 from dotenv import load_dotenv
 
@@ -17,17 +18,26 @@ load_dotenv(os.path.join(_BACKEND_DIR, ".env"), override=True)
 Base.metadata.create_all(bind=engine)
 
 # ── Static directory for barber photos ───────────────────────────────────────
-os.makedirs("static/barbers", exist_ok=True)
+# Vercel's filesystem is read-only except for /tmp
+STATIC_DIR = "/tmp/static" if os.environ.get("VERCEL") else os.path.join(_BACKEND_DIR, "static")
+os.makedirs(f"{STATIC_DIR}/barbers", exist_ok=True)
 
 app = FastAPI(title="Barbershop API", version="1.0.0")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+_allowed_origins = [
+    "http://localhost:3000", "http://localhost:3001",
+    "http://localhost:3002", "http://localhost:3003",
+    "http://localhost:9000",
+]
+_vercel_url = os.getenv("VERCEL_URL")
+if _vercel_url:
+    _allowed_origins.append(f"https://{_vercel_url}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001",
-                   "http://localhost:3002", "http://localhost:3003",
-                   "http://localhost:9000"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -170,7 +180,7 @@ async def upload_barber_photo(barber_id: int, photo: UploadFile = File(...), db:
         raise HTTPException(400, "Only jpg, png, webp images are allowed")
 
     filename = f"barber_{barber_id}_{uuid.uuid4().hex[:8]}.{ext}"
-    filepath = f"static/barbers/{filename}"
+    filepath = os.path.join(STATIC_DIR, "barbers", filename)
 
     async with aiofiles.open(filepath, "wb") as f:
         content = await photo.read()
@@ -178,7 +188,7 @@ async def upload_barber_photo(barber_id: int, photo: UploadFile = File(...), db:
 
     # Remove old photo file if present
     if obj.photo_url:
-        old_path = obj.photo_url.lstrip("/")
+        old_path = obj.photo_url.lstrip("/").replace("static/", f"{STATIC_DIR}/", 1)
         if os.path.exists(old_path):
             os.remove(old_path)
 
@@ -462,7 +472,11 @@ def reschedule_appointment(
 
 # ── Home Page / Appearance ────────────────────────────────────────────────────
 
-HERO_IMAGE_PATH = os.path.join(_BACKEND_DIR, "..", "frontend", "public", "hero-bg.png")
+HERO_IMAGE_PATH = (
+    "/tmp/hero-bg.png"
+    if os.environ.get("VERCEL")
+    else os.path.join(_BACKEND_DIR, "..", "frontend", "public", "hero-bg.png")
+)
 
 @app.post("/settings/hero-image")
 async def upload_hero_image(image: UploadFile = File(...)):

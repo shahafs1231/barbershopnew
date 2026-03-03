@@ -1,6 +1,10 @@
 {
-  "rewriteDest": "/backend/main.py",
+  "version": 2,
   "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/next"
+    },
     {
       "src": "backend/main.py",
       "use": "@vercel/python"
@@ -8,8 +12,12 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/(services|barbers|appointments|availability|webhook|info|settings)(.*)",
       "dest": "backend/main.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/$1"
     }
   ]
 }
