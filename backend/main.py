@@ -1,3 +1,6 @@
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from fastapi import FastAPI, Depends, HTTPException, Query, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -5,7 +8,7 @@ from fastapi.responses import PlainTextResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, date, timedelta
-import os, uuid, aiofiles
+import uuid, aiofiles
 
 import models
 import schemas
