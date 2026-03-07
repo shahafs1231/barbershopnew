@@ -1,7 +1,7 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from fastapi import FastAPI, Depends, HTTPException, Query, UploadFile, File, Request
+from fastapi import FastAPI, Depends, HTTPException, Query, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import PlainTextResponse
@@ -562,3 +562,51 @@ async def whatsapp_webhook(request: Request):
                         print(f"[WH] ERROR: {e}")
 
     return {"status": "ok"}
+
+
+# ── AI Hair Try-On ────────────────────────────────────────────────────────────
+
+@app.post("/ai/hairstyle-preview")
+async def hairstyle_preview(
+    photo: UploadFile = File(...),
+    style: str = Form(...),
+):
+    import base64
+    from google import genai as ggenai
+    from google.genai import types as gtypes
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(500, "GEMINI_API_KEY not configured")
+
+    content = await photo.read()
+    mime_type = photo.content_type or "image/jpeg"
+    if mime_type not in {"image/jpeg", "image/png", "image/webp"}:
+        raise HTTPException(400, "Only JPEG, PNG or WebP images are supported")
+
+    prompt = (
+        f"Edit this person's hairstyle to: {style}. "
+        "Keep their face, skin tone, background, and clothing exactly the same. "
+        "Only modify the hair — style, length, and shape."
+    )
+
+    client = ggenai.Client(api_key=api_key)
+    response = client.models.generate_content(
+        model="gemini-2.0-flash-preview-image-generation",
+        contents=[
+            gtypes.Content(parts=[
+                gtypes.Part(text=prompt),
+                gtypes.Part(inline_data=gtypes.Blob(mime_type=mime_type, data=content)),
+            ])
+        ],
+        config=gtypes.GenerateContentConfig(
+            response_modalities=["TEXT", "IMAGE"],
+        ),
+    )
+
+    for part in response.candidates[0].content.parts:
+        if part.inline_data:
+            img_b64 = base64.b64encode(part.inline_data.data).decode()
+            return {"image": img_b64, "mime_type": part.inline_data.mime_type}
+
+    raise HTTPException(500, "Gemini did not return an image — try a different photo or style")

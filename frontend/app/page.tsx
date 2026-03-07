@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Scissors, Clock, Calendar, CreditCard, ChevronRight } from "lucide-react";
+import { Scissors, Clock, Calendar, CreditCard, ChevronRight, Sparkles } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import LanguageToggle from "@/components/LanguageToggle";
 
@@ -56,6 +56,12 @@ export default function HomePage() {
               {t.nav.bookNow} <ChevronRight className="w-5 h-5" />
             </Link>
             <Link
+              href="/tryon"
+              className="inline-flex items-center gap-2 bg-white/10 border border-amber-400/60 text-amber-300 px-8 py-4 rounded-full text-base font-medium hover:bg-white/20 transition-colors"
+            >
+              <Sparkles className="w-4 h-4" /> {t.nav.tryAI}
+            </Link>
+            <Link
               href="/manage"
               className="inline-flex items-center gap-2 border border-white/40 text-white px-8 py-4 rounded-full text-base font-medium hover:bg-white/10 transition-colors"
             >
@@ -95,6 +101,12 @@ export default function HomePage() {
               className="inline-flex items-center gap-2 bg-amber-400 text-[#1a1a1a] font-bold px-8 py-3 rounded-full hover:bg-amber-300 transition-colors"
             >
               {t.home.scheduleNow} <ChevronRight className="w-5 h-5" />
+            </Link>
+            <Link
+              href="/tryon"
+              className="inline-flex items-center gap-2 border border-amber-400/60 text-amber-300 px-8 py-3 rounded-full hover:bg-white/10 transition-colors text-sm font-medium"
+            >
+              <Sparkles className="w-4 h-4" /> {t.nav.tryAI}
             </Link>
             <Link
               href="/manage"
