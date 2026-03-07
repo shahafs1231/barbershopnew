@@ -600,7 +600,7 @@ async def hairstyle_preview(
 
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models"
-        f"/gemini-2.0-flash-preview-image-generation:generateContent?key={api_key}"
+        f"/gemini-2.0-flash-exp-image-generation:generateContent?key={api_key}"
     )
 
     async with httpx.AsyncClient(timeout=60) as client:
