@@ -16,7 +16,9 @@ from database import engine, get_db, Base
 from dotenv import load_dotenv
 
 _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
-load_dotenv(os.path.join(_BACKEND_DIR, ".env"), override=True)
+_env_file = os.path.join(_BACKEND_DIR, ".env")
+if os.path.isfile(_env_file):
+    load_dotenv(_env_file, override=True)
 
 Base.metadata.create_all(bind=engine)
 
