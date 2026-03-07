@@ -12,7 +12,7 @@
   ],
   "routes": [
     {
-      "src": "/(services|barbers|appointments|availability|webhook|info|settings)(.*)",
+      "src": "/(services|barbers|appointments|availability|webhook|info|settings|ai)(.*)",
       "dest": "backend/main.py"
     },
     {
