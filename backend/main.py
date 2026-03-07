@@ -571,9 +571,7 @@ async def hairstyle_preview(
     photo: UploadFile = File(...),
     style: str = Form(...),
 ):
-    import base64
-    from google import genai as ggenai
-    from google.genai import types as gtypes
+    import base64, httpx
 
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -590,23 +588,30 @@ async def hairstyle_preview(
         "Only modify the hair — style, length, and shape."
     )
 
-    client = ggenai.Client(api_key=api_key)
-    response = client.models.generate_content(
-        model="gemini-2.0-flash-preview-image-generation",
-        contents=[
-            gtypes.Content(parts=[
-                gtypes.Part(text=prompt),
-                gtypes.Part(inline_data=gtypes.Blob(mime_type=mime_type, data=content)),
-            ])
-        ],
-        config=gtypes.GenerateContentConfig(
-            response_modalities=["TEXT", "IMAGE"],
-        ),
+    body = {
+        "contents": [{
+            "parts": [
+                {"text": prompt},
+                {"inline_data": {"mime_type": mime_type, "data": base64.b64encode(content).decode()}},
+            ]
+        }],
+        "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]},
+    }
+
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models"
+        f"/gemini-2.0-flash-preview-image-generation:generateContent?key={api_key}"
     )
 
-    for part in response.candidates[0].content.parts:
-        if part.inline_data:
-            img_b64 = base64.b64encode(part.inline_data.data).decode()
-            return {"image": img_b64, "mime_type": part.inline_data.mime_type}
+    async with httpx.AsyncClient(timeout=60) as client:
+        resp = await client.post(url, json=body)
+
+    if resp.status_code != 200:
+        raise HTTPException(502, f"Gemini API error {resp.status_code}: {resp.text[:200]}")
+
+    data = resp.json()
+    for part in data.get("candidates", [{}])[0].get("content", {}).get("parts", []):
+        if "inlineData" in part:
+            return {"image": part["inlineData"]["data"], "mime_type": part["inlineData"]["mimeType"]}
 
     raise HTTPException(500, "Gemini did not return an image — try a different photo or style")
